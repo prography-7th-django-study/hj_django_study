@@ -14,9 +14,3 @@ class Member(models.Model):
         choices=IsMember.choices,
         default=IsMember.PENDED,
     )
-
-    def is_upperclass(self):
-        return self.is_member in {
-            self.IsMember.CONFIRMED,
-            self.IsMember.PENDED,
-        }
