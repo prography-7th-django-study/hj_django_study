@@ -11,6 +11,7 @@ class Post(models.Model):
     description = models.TextField()
     image = models.ImageField(upload_to='post', blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey('profiles.Profile', on_delete=models.CASCADE, related_name='posted_author')
     members = models.ManyToManyField(
         Profile,
@@ -28,4 +29,5 @@ class Comment(models.Model):
     description = models.TextField()
     parent = models.ForeignKey('self', related_name='replies', on_delete=models.CASCADE, blank=True, default='', null=True)
     post = models.ForeignKey('posts.Post', on_delete=models.CASCADE)
+    updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
