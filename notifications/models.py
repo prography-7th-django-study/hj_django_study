@@ -15,7 +15,3 @@ def create_user_notification(sender, instance, created, **kwargs):
     if created:
         Notification.objects.create(user=instance, messages="가입을 축하합니다.")
 
-@receiver(post_save, sender=Member)
-def create_member_notification(sender, instance, created, **kwargs):
-    if created:
-        Notification.objects.create(user=instance, messages="가입을 축하합니다.")

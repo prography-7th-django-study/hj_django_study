@@ -1,4 +1,7 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    ]
+from .views import MemberViewSet
+
+router = DefaultRouter(trailing_slash=False)
+router.register(r'member', MemberViewSet, basename='member')
+urlpatterns = router.urls
