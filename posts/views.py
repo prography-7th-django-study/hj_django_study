@@ -1,83 +1,39 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
-from posts.models import Post
-from posts.serializers import PostSerializer, PostListSerializer
-
-
-class PostViewSet(viewsets.ViewSet):
-    def get_object(self, pk):
-        return get_object_or_404(Post, id=pk)
-
-    def list(self, request):
-        queryset = Post.objects.all()
-        serializer = PostListSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def create(self, request):
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
-        post = self.get_object(pk)
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
-        post = self.get_object(pk)
-        serializer = PostSerializer(post, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, pk=None):
-        post = self.get_object(pk)
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-
-from posts.models import Post
-from posts.serializers import PostSerializer, PostListSerializer
+from posts.models import Post, Comment
+from posts.serializers import PostSerializer, PostListSerializer, CommentWriteSerializer, \
+    CommentReadSerializer
 
 
-class PostViewSet(viewsets.ViewSet):
-    def get_object(self, pk):
-        return get_object_or_404(Post, id=pk)
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
 
-    def list(self, request):
-        queryset = Post.objects.all()
-        serializer = PostListSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_serializer_class(self):
+        if self.action == "list":
+            return PostListSerializer
+        else:
+            return PostSerializer
 
-    def create(self, request):
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request, pk=None):
-        post = self.get_object(pk)
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
+class CommentViewSet(mixins.CreateModelMixin,
+                   mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin,
+                     mixins.RetrieveModelMixin,GenericViewSet):
 
-    def update(self, request, pk=None):
-        post = self.get_object(pk)
-        serializer = PostSerializer(post, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    queryset = Comment.objects.all()
 
-    def destroy(self, request, pk=None):
-        post = self.get_object(pk)
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return CommentReadSerializer
+        else:
+            return CommentWriteSerializer
+
+class PostCommentReadViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = CommentReadSerializer
+
+    def get_queryset(self):
+        post_id = self.kwargs['postid']
+        return Comment.objects.filter(post__id=post_id)

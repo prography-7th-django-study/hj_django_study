@@ -3,14 +3,14 @@ from django.utils.translation import gettext_lazy as _
 
 class Member(models.Model):
     post = models.ForeignKey('posts.Post', on_delete=models.CASCADE)
-    member = models.ForeignKey('profiles.Profile', on_delete=models.CASCADE)
+    member = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
 
-    class IsMember(models.TextChoices):
+    class MemberType(models.TextChoices):
         CONFIRMED = 'Co', _('Confirmed')
         PENDED = 'Pe', _('Pended')
 
-    is_member = models.CharField(
+    member_type = models.CharField(
         max_length=2,
-        choices=IsMember.choices,
-        default=IsMember.PENDED,
+        choices=MemberType.choices,
+        default=MemberType.PENDED,
     )

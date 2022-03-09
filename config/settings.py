@@ -43,7 +43,6 @@ PROJECT_APPS = [
     'accounts',
     'posts',
     'members',
-    'profiles',
     'notifications',
 ]
 

@@ -1,11 +1,10 @@
 from rest_framework import serializers
-from members.models import Member
-from profiles.models import Profile
+from accounts.models import User
 from .models import Post,Comment
 
 class PostMemberSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Profile
+        model = User
         fields = (
             'id',
             'nickname',
@@ -13,9 +12,7 @@ class PostMemberSerializer(serializers.ModelSerializer):
         )
 
 class PostListSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField()
-    comment_count = serializers.SerializerMethodField()
-    member_count = serializers.SerializerMethodField()
+    author = PostMemberSerializer(read_only=True)
     class Meta:
         model = Post
         fields = (
@@ -27,25 +24,9 @@ class PostListSerializer(serializers.ModelSerializer):
             'comment_count',
             'member_count',
         )
-    def get_author(self, obj):
-        id = obj.author.id
-        profile = Profile.objects.get(id=id)
-        serializer = PostMemberSerializer(profile)
-        return serializer.data
-
-    def get_comment_count(self, obj):
-        queryset = Comment.objects.filter(post=obj)
-        count = queryset.count()
-        return count
-
-    def get_member_count(self, obj):
-        queryset = Member.objects.filter(post=obj, is_member = 'Co')
-        count = queryset.count()
-        return count
 
 class PostSerializer(serializers.ModelSerializer):
     members = PostMemberSerializer(read_only=True, many=True)
-    author = PostMemberSerializer()
     class Meta:
         model = Post
         fields = (
@@ -59,10 +40,25 @@ class PostSerializer(serializers.ModelSerializer):
             'members',
         )
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
+            'id',
+            'author',
+            'description',
+            'parent',
+            'post',
+            'created_at',
+            'updated_at',
+        )
+
+class CommentReadSerializer(serializers.ModelSerializer):
+    author = PostMemberSerializer()
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
             'author',
             'description',
             'parent',
