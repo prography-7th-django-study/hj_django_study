@@ -2,7 +2,6 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from accounts.models import User
-from members.models import Member
 
 
 class Notification(models.Model):

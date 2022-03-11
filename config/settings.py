@@ -42,7 +42,6 @@ DJANGO_APPS = [
 PROJECT_APPS = [
     'accounts',
     'posts',
-    'members',
     'notifications',
 ]
 

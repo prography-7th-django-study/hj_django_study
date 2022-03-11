@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from accounts.models import User
-from .models import Post,Comment
+from .models import Post, Comment, Member
 
 class PostMemberSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,6 +16,7 @@ class PostListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = (
+            'id',
             'title',
             'image',
             'created_at',
@@ -65,4 +66,14 @@ class CommentReadSerializer(serializers.ModelSerializer):
             'post',
             'created_at',
             'updated_at',
+        )
+
+class MemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = (
+            'id',
+            'post',
+            'member',
+            'member_type',
         )

@@ -1,11 +1,9 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, mixins
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from posts.models import Post, Comment
+from posts.models import Post, Comment, Member
 from posts.serializers import PostSerializer, PostListSerializer, CommentWriteSerializer, \
-    CommentReadSerializer
+    CommentReadSerializer, MemberSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -37,3 +35,10 @@ class PostCommentReadViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         post_id = self.kwargs['postid']
         return Comment.objects.filter(post__id=post_id)
+
+class MemberViewSet(mixins.CreateModelMixin,
+                   mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin,
+                     mixins.RetrieveModelMixin,GenericViewSet):
+    serializer_class = MemberSerializer
+    queryset = Member.objects.all()
