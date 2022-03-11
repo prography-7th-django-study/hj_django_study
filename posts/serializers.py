@@ -11,7 +11,7 @@ class PostMemberSerializer(serializers.ModelSerializer):
             'image',
         )
 
-class PostListSerializer(serializers.ModelSerializer):
+class PostSummerizeSerializer(serializers.ModelSerializer):
     author = PostMemberSerializer(read_only=True)
     class Meta:
         model = Post

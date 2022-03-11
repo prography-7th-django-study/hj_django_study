@@ -6,14 +6,17 @@ from django.db import models
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
-    def create_user(self, nickname, password, description, image):
+    def create_user(self, email, nickname, password, description, image):
 
+        if not email:
+            raise ValueError('must have user email')
         if not nickname:
             raise ValueError('must have user nickname')
         if not password:
             raise ValueError('must have user password')
 
         user = self.model(
+            email=email,
             nickname=nickname,
             description=description,
             image=image,
@@ -22,9 +25,10 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, nickname, password=None, description=None, image=None, **kwargs):
+    def create_superuser(self,email, nickname, password=None, description=None, image=None, **kwargs):
 
         user = self.create_user(
+            email = email,
             nickname=nickname,
             description='',
             image='',
@@ -38,14 +42,15 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
-    nickname = models.CharField(max_length=16, unique=True, blank=True, default='')
+    email = models.EmailField(max_length=255,unique=True,)
+    nickname = models.CharField(max_length=16, unique=True)
     image = models.ImageField(upload_to='profile', blank=True, default='')
     description = models.TextField()
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'nickname'
-
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['nickname']
     def __str__(self):
         return self.nickname
 
