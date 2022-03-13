@@ -10,3 +10,14 @@ class ProfileSerializer(serializers.ModelSerializer):
             'image',
             'description',
         )
+
+class UserSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'email',
+            'password',
+            'nickname',
+            'description',
+        )

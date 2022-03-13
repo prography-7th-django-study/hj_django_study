@@ -2,7 +2,7 @@ from rest_framework import serializers
 from accounts.models import User
 from .models import Post, Comment, Member
 
-class PostMemberSerializer(serializers.ModelSerializer):
+class MemberSummarizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -11,8 +11,8 @@ class PostMemberSerializer(serializers.ModelSerializer):
             'image',
         )
 
-class PostSummerizeSerializer(serializers.ModelSerializer):
-    author = PostMemberSerializer(read_only=True)
+class PostSummarizeSerializer(serializers.ModelSerializer):
+    author = MemberSummarizeSerializer()
     class Meta:
         model = Post
         fields = (
@@ -27,7 +27,6 @@ class PostSummerizeSerializer(serializers.ModelSerializer):
         )
 
 class PostSerializer(serializers.ModelSerializer):
-    members = PostMemberSerializer(read_only=True, many=True)
     class Meta:
         model = Post
         fields = (
@@ -40,8 +39,19 @@ class PostSerializer(serializers.ModelSerializer):
             'author',
             'members',
         )
+        read_only_fields = (
+            'id',
+            'created_at',
+            'updated_at',
+            'members',
+        )
 
-class CommentWriteSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        self.fields['author'] = MemberSummarizeSerializer(read_only=True)
+        self.fields['members'] = MemberSummarizeSerializer(read_only=True, many=True)
+        return super().to_representation(self.instance)
+
+class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = (
@@ -53,20 +63,15 @@ class CommentWriteSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         )
-
-class CommentReadSerializer(serializers.ModelSerializer):
-    author = PostMemberSerializer()
-    class Meta:
-        model = Comment
-        fields = (
+        read_only_fields = (
             'id',
-            'author',
-            'description',
-            'parent',
-            'post',
             'created_at',
             'updated_at',
         )
+
+    def to_representation(self, instance):
+        self.fields['author'] = MemberSummarizeSerializer(read_only=True)
+        return super().to_representation(self.instance)
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
