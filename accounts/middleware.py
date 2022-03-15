@@ -22,28 +22,17 @@ class JsonWebTokenMiddleWare(object):
                 and "admin" not in request.path
                 and request.method not in SAFE_METHODS
             ):
-                print(request.path)
-                # Except signup and login
+
                 headers = request.headers
-                # Get Authorization header or None
                 access_token = headers.get("Authorization", None)
-                print(access_token)
-                # If access_token isn't exist
                 if not access_token:
                     raise PermissionDenied()
 
-                # Decode JWT token
-                print('?')
                 payload = decode_jwt(access_token)
-                print('??')
-                # Get user from decoded jwt payload
-                email = payload.get("aud", None)
+                email = payload.get("email", None)
 
-                # If username is None
                 if not email:
                     raise PermissionDenied()
-
-                # Get user object using username
                 User.objects.get(email=email)
             response = self.get_response(request)
 
@@ -51,11 +40,11 @@ class JsonWebTokenMiddleWare(object):
 
         except (PermissionDenied, User.DoesNotExist):
             return JsonResponse(
-                {"error": "Authorization Error"}, status=HTTPStatus.UNAUTHORIZED
+                {"error": "Authorization Error"}, status=status.HTTP_401_UNAUTHORIZED
             )
 
         except ExpiredSignatureError:
             return JsonResponse(
                 {"error": "Expired token. Please log in again."},
-                status=status.FORBIDDEN,
+                status=status.HTTP_403_FORBIDDEN,
             )

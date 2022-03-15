@@ -1,8 +1,5 @@
-from datetime import datetime, timedelta
 from http import HTTPStatus
 from json import loads
-
-import jwt
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.db import IntegrityError
@@ -13,9 +10,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.jwt import encode_jwt, generate_access_token
+from accounts.jwt import generate_access_token
 from accounts.models import User
-from accounts.serializers import ProfileSerializer, UserSerializer
+from accounts.serializers import UserSerializer
 
 
 
@@ -75,15 +72,15 @@ class SignupView(APIView):
         status = HTTPStatus.CREATED
         try:
             json_body = loads(request.body)
-            print('?')
             email = json_body.get("email", None)
             password = json_body.get("password", None)
             nickname = json_body.get("nickname", None)
+
             if not email or not password:
                 raise ValueError()
 
             email_validator = ASCIIUsernameValidator(
-                message="Please check the username condition."
+                message="Please check the email condition."
             )
 
             email_validator(email)
