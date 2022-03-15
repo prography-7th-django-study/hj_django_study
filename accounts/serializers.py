@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User
 
+
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -11,13 +12,23 @@ class ProfileSerializer(serializers.ModelSerializer):
             'description',
         )
 
-class UserSerailizer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'token',
+            'email',
+            'password',
+            'nickname',
+            'description',
+        )
+
+class AuthenticateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
             'id',
             'email',
-            'password',
-            'nickname',
-            'description',
+            'password'
         )

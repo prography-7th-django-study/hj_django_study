@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status, mixins
+from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 
 from posts.models import Post, Comment, Member
@@ -15,6 +16,7 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostSerializer
 
 
+
 class CommentViewSet(mixins.CreateModelMixin,
                    mixins.UpdateModelMixin,
                    mixins.DestroyModelMixin,
@@ -28,7 +30,7 @@ class PostCommentReadViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
-        post_id = self.kwargs['postid']
+        post_id = self.kwargs['post_pk']
         return Comment.objects.filter(post__id=post_id)
 
 

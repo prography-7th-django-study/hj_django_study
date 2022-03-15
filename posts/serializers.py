@@ -27,6 +27,8 @@ class PostSummarizeSerializer(serializers.ModelSerializer):
         )
 
 class PostSerializer(serializers.ModelSerializer):
+    members = MemberSummarizeSerializer(read_only=True, many=True)
+    author = MemberSummarizeSerializer(read_only=True)
     class Meta:
         model = Post
         fields = (
@@ -39,19 +41,15 @@ class PostSerializer(serializers.ModelSerializer):
             'author',
             'members',
         )
-        read_only_fields = (
-            'id',
-            'created_at',
-            'updated_at',
-            'members',
-        )
 
-    def to_representation(self, instance):
-        self.fields['author'] = MemberSummarizeSerializer(read_only=True)
-        self.fields['members'] = MemberSummarizeSerializer(read_only=True, many=True)
-        return super().to_representation(self.instance)
+    def create(self, validated_data):
+        validated_data["author"] = self.context.get("request").user
+        return super().create(validated_data)
+
+
 
 class CommentSerializer(serializers.ModelSerializer):
+    author = MemberSummarizeSerializer(read_only=True)
     class Meta:
         model = Comment
         fields = (
@@ -63,15 +61,10 @@ class CommentSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         )
-        read_only_fields = (
-            'id',
-            'created_at',
-            'updated_at',
-        )
 
-    def to_representation(self, instance):
-        self.fields['author'] = MemberSummarizeSerializer(read_only=True)
-        return super().to_representation(self.instance)
+    def create(self, validated_data):
+        validated_data["author"] = self.context.get("request").user
+        return super().create(validated_data)
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
