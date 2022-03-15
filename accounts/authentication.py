@@ -25,4 +25,5 @@ class JSONWebTokenAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed()
         email = payload['email']
         user = User.objects.get(email=email)
+        
         return (user, payload)
