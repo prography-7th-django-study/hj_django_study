@@ -48,9 +48,9 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
     email = models.EmailField(max_length=255,unique=True,)
-    nickname = models.CharField(max_length=16, unique=True)
+    nickname = models.CharField(max_length=16, blank=True, default='')
     image = models.ImageField(upload_to='profile', blank=True, default='')
-    description = models.TextField()
+    description = models.TextField(blank=True, default='')
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
@@ -62,9 +62,3 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_staff(self):
         return self.is_admin
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)

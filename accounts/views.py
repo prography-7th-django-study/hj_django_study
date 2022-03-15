@@ -1,19 +1,32 @@
+from datetime import datetime, timedelta
+from http import HTTPStatus
+from json import loads
+
+import jwt
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.validators import ASCIIUsernameValidator
+from django.db import IntegrityError
+from django.http import HttpResponseNotAllowed, JsonResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from accounts.jwt import encode_jwt, generate_access_token
 from accounts.models import User
-from accounts.serializers import ProfileSerializer, UserSerailizer
+from accounts.serializers import ProfileSerializer, UserSerializer
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
     def get_serializer_class(self):
-        if self.signup or self.login:
-            return ProfileSerializer
+        if self.action == 'login':
+            return UserSerializer
         else:
-            return UserSerailizer
+            return UserSerializer
 
     @action(methods=['get'], detail=False)
     def check_nickname(self, request):
@@ -24,13 +37,80 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             return Response(status=status.HTTP_200_OK)
 
-    @action(methods=['post'], detail=False)
-    def signup(self, request):
-        serializer = UserSerailizer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-        return Response(status=status.HTTP_201_CREATED)
+class LoginView(APIView):
+    def post(self, request):
+        data = {}
+        try:
+            if request.method == "POST":
+                json_body = loads(request.body)
 
-    @action(methods=['post'], detail=False)
-    def login(self, request):
-        return Response(status=status.HTTP_201_CREATED)
+                email = json_body.get("email", None)
+                password = json_body.get("password", None)
+
+                if not email or not password:
+                    raise ValueError()
+
+                user = User.objects.get(email=email)
+
+                if not user.check_password(password):
+                    raise ValueError()
+
+                data["access_token"] = generate_access_token(email)
+                data["email"] = email
+                data["nickname"] = user.nickname
+                status = HTTPStatus.OK
+            else:
+                return HttpResponseNotAllowed(["POST"])
+
+        except (ValueError, User.DoesNotExist):
+            # Login request validation exception
+            data["error"] = "Invalid form. Please fill it out again."
+            status = HTTPStatus.BAD_REQUEST
+
+        return JsonResponse(data, status=status)
+
+class SignupView(APIView):
+    def post(self, request):
+        data = {}
+        status = HTTPStatus.CREATED
+        try:
+            json_body = loads(request.body)
+            print('?')
+            email = json_body.get("email", None)
+            password = json_body.get("password", None)
+            nickname = json_body.get("nickname", None)
+            if not email or not password:
+                raise ValueError()
+
+            email_validator = ASCIIUsernameValidator(
+                message="Please check the username condition."
+            )
+
+            email_validator(email)
+            validate_password(password)
+
+            user = User.objects.create(email=email,nickname=nickname)
+            user.set_password(password)
+            user.save()
+
+            data["access_token"] = generate_access_token(email)
+            data["email"] = email
+            data['id'] = user.id
+            data['nickname'] = user.nickname
+
+        except ValidationError as e:
+            # Password validation exception
+            data["error"] = e.messages
+            status = HTTPStatus.BAD_REQUEST
+
+        except IntegrityError:
+            # Duplicate user name exception
+            data["error"] = "Duplicate user name. Please use a different name."
+            status = HTTPStatus.BAD_REQUEST
+
+        except ValueError:
+            # Invalid user request exception
+            data["error"] = "Invalid form. Please fill it out again."
+            status = HTTPStatus.BAD_REQUEST
+
+        return JsonResponse(data, status=status)
