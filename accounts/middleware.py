@@ -18,6 +18,7 @@ class JsonWebTokenMiddleWare(object):
                 request.path != "/api/users/signup"
                 and request.path != "/api/users/login"
                 and "admin" not in request.path
+                and "swagger" not in request.path
                 and request.method not in SAFE_METHODS
             ):
 

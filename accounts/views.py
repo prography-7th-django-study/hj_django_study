@@ -96,17 +96,14 @@ class SignupView(APIView):
             data['nickname'] = user.nickname
 
         except ValidationError as e:
-            # Password validation exception
             data["error"] = e.messages
             status = HTTPStatus.BAD_REQUEST
 
         except IntegrityError:
-            # Duplicate user name exception
             data["error"] = "Duplicate user name. Please use a different name."
             status = HTTPStatus.BAD_REQUEST
 
         except ValueError:
-            # Invalid user request exception
             data["error"] = "Invalid form. Please fill it out again."
             status = HTTPStatus.BAD_REQUEST
 

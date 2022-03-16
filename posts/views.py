@@ -4,11 +4,14 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from posts.models import Post, Comment, Member
+from posts.permissions import IsOwnerOrReadOnly
 from posts.serializers import PostSerializer, MemberSerializer, PostSummarizeSerializer, CommentSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
+    permission_classes = [IsOwnerOrReadOnly]
+
 
     def get_serializer_class(self):
         if self.action == "list":

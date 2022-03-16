@@ -48,6 +48,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 
+
 class CommentSerializer(serializers.ModelSerializer):
     author = MemberSummarizeSerializer(read_only=True)
     class Meta:
