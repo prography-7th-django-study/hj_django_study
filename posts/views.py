@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from posts.models import Post, Comment, Member
@@ -15,7 +16,17 @@ class PostViewSet(viewsets.ModelViewSet):
         else:
             return PostSerializer
 
+    @action(detail=True, methods=['get'])
+    def comments(self, request, pk):
+        comments = Comment.objects.filter(post__id=pk)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'])
+    def members(self, request, pk):
+        members = Member.objects.filter(post__id=pk)
+        serializer = MemberSerializer(members, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
 
 class CommentViewSet(mixins.CreateModelMixin,
                    mixins.UpdateModelMixin,
@@ -26,17 +37,8 @@ class CommentViewSet(mixins.CreateModelMixin,
     serializer_class = CommentSerializer
 
 
-class PostCommentReadViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CommentSerializer
-
-    def get_queryset(self):
-        post_id = self.kwargs['post_pk']
-        return Comment.objects.filter(post__id=post_id)
-
-
 class MemberViewSet(mixins.CreateModelMixin,
-                   mixins.UpdateModelMixin,
-                   mixins.DestroyModelMixin,
-                     mixins.RetrieveModelMixin,GenericViewSet):
+                    mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin, GenericViewSet):
     serializer_class = MemberSerializer
     queryset = Member.objects.all()
