@@ -4,6 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.db import IntegrityError
 from django.http import HttpResponseNotAllowed, JsonResponse
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -12,18 +13,13 @@ from rest_framework.views import APIView
 
 from accounts.jwt import generate_access_token
 from accounts.models import User
-from accounts.serializers import UserSerializer
-
+from accounts.serializers import UserSerializer, AuthenticateSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-
-    def get_serializer_class(self):
-        if self.action == 'login':
-            return UserSerializer
-        else:
-            return UserSerializer
+    serializer_class = UserSerializer
+    ordering_fields = ['id']
 
     @action(methods=['get'], detail=False)
     def check_nickname(self, request):
@@ -66,7 +62,10 @@ class LoginView(APIView):
 
         return JsonResponse(data, status=status)
 
+
+
 class SignupView(APIView):
+
     def post(self, request):
         data = {}
         status = HTTPStatus.CREATED
