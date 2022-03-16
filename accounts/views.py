@@ -34,26 +34,22 @@ class LoginView(APIView):
     def post(self, request):
         data = {}
         try:
-            if request.method == "POST":
-                json_body = loads(request.body)
+            json_body = loads(request.body)
+            email = json_body.get("email", None)
+            password = json_body.get("password", None)
 
-                email = json_body.get("email", None)
-                password = json_body.get("password", None)
+            if not email or not password:
+                raise ValueError()
 
-                if not email or not password:
-                    raise ValueError()
+            user = User.objects.get(email=email)
 
-                user = User.objects.get(email=email)
+            if not user.check_password(password):
+                raise ValueError()
 
-                if not user.check_password(password):
-                    raise ValueError()
-
-                data["access_token"] = generate_access_token(email)
-                data["email"] = email
-                data["nickname"] = user.nickname
-                status = HTTPStatus.OK
-            else:
-                return HttpResponseNotAllowed(["POST"])
+            data["access_token"] = generate_access_token(email)
+            data["email"] = email
+            data["nickname"] = user.nickname
+            status = HTTPStatus.OK
 
         except (ValueError, User.DoesNotExist):
             # Login request validation exception
