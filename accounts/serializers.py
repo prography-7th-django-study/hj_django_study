@@ -2,27 +2,20 @@ from rest_framework import serializers
 from .models import User
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'nickname',
-            'image',
-            'description',
-        )
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
             'id',
-            'token',
             'email',
             'password',
             'nickname',
             'description',
+            'image',
         )
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
 class AuthenticateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,5 +23,9 @@ class AuthenticateSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'email',
-            'password'
+            'password',
+            'nickname',
         )
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }

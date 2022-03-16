@@ -48,7 +48,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
     email = models.EmailField(max_length=255,unique=True,)
-    nickname = models.CharField(max_length=16, blank=True, default='')
+    nickname = models.CharField(max_length=16, unique=True)
     image = models.ImageField(upload_to='profile', blank=True, default='')
     description = models.TextField(blank=True, default='')
     is_active = models.BooleanField(default=True)
