@@ -6,8 +6,6 @@ from django.http import JsonResponse
 from django.core.exceptions import PermissionDenied
 from .jwt import decode_jwt
 from jwt.exceptions import ExpiredSignatureError
-from http import HTTPStatus
-
 
 class JsonWebTokenMiddleWare(object):
 
