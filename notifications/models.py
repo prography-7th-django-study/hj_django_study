@@ -10,6 +10,9 @@ class Notification(models.Model):
     messages = models.CharField(max_length=32)
     status = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['-id']
+
 @receiver(post_save, sender=User)
 def create_user_notification(sender, instance, created, **kwargs):
     if created:
@@ -28,3 +31,8 @@ def create_member_notification(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Member)
 def delete_member_notification(sender, instance, **kwargs):
     Notification.objects.create(user=instance.member, messages="가입이 거부당하셨습니다.")
+
+# 가입 성공은 PUT api/members신호가 왔을때인데 이때 DJANGO SIGNAL사용법은..?
+@receiver(m2m_changed, sender=Member)
+def change_member_notification(sender, instance, **kwargs):
+    Notification.objects.create(user=instance.member, messages="가입이 수락되었습니다.")

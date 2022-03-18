@@ -62,3 +62,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_staff(self):
         return self.is_admin
+
+    class Meta:
+        ordering = ['-id']

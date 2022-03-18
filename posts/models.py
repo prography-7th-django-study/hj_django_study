@@ -24,6 +24,9 @@ class Post(models.Model):
     def member_count(self):
         return self.member_set.count()
 
+    class Meta:
+        ordering = ['-id']
+
 @receiver(post_save, sender=Post)
 def create_post_member(sender, instance, created, **kwargs):
     if created:
@@ -37,6 +40,9 @@ class Comment(models.Model):
     post = models.ForeignKey('posts.Post', on_delete=models.CASCADE)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
 
 
 class Member(models.Model):
@@ -52,3 +58,6 @@ class Member(models.Model):
         choices=MemberType.choices,
         default=MemberType.PENDED,
     )
+
+    class Meta:
+        ordering = ['-id']

@@ -3,10 +3,10 @@ from json import loads
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.db import IntegrityError
-from django.http import HttpResponseNotAllowed, JsonResponse
+from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,10 +16,18 @@ from accounts.models import User
 from accounts.serializers import UserSerializer, AuthenticateSerializer
 
 
+@api_view(["GET"])
+def django_study_apiserver(request):
+    res = {
+        "server": "on"
+    }
+    return Response(res, status=status.HTTP_200_OK)
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    ordering_fields = ['id']
+
+
 
     @action(methods=['get'], detail=False)
     def check_nickname(self, request):
@@ -30,7 +38,11 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             return Response(status=status.HTTP_200_OK)
 
+
+
+
 class LoginView(APIView):
+    @swagger_auto_schema(request_body=AuthenticateSerializer,responses={200: AuthenticateSerializer()})
     def post(self, request):
         data = {}
         try:
@@ -61,7 +73,7 @@ class LoginView(APIView):
 
 
 class SignupView(APIView):
-
+    @swagger_auto_schema(request_body=AuthenticateSerializer, responses={200: AuthenticateSerializer()})
     def post(self, request):
         data = {}
         status = HTTPStatus.CREATED
@@ -101,5 +113,4 @@ class SignupView(APIView):
         except ValueError:
             data["error"] = "Invalid form. Please fill it out again."
             status = HTTPStatus.BAD_REQUEST
-
         return JsonResponse(data, status=status)
