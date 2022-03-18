@@ -46,9 +46,6 @@ class PostSerializer(serializers.ModelSerializer):
         validated_data["author"] = self.context.get("request").user
         return super().create(validated_data)
 
-
-
-
 class CommentSerializer(serializers.ModelSerializer):
     author = MemberSummarizeSerializer(read_only=True)
     class Meta:
