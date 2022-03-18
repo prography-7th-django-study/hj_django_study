@@ -15,8 +15,8 @@ class JsonWebTokenMiddleWare(object):
     def __call__(self, request):
         try:
             if (
-                request.path != "/api/signup"
-                and request.path != "/api/login"
+                request.path != "/api/users/signup"
+                and request.path != "/api/users/login"
                 and "admin" not in request.path
                 and "swagger" not in request.path
                 and request.method not in SAFE_METHODS

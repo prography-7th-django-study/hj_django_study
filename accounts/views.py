@@ -13,11 +13,11 @@ from rest_framework.views import APIView
 
 from accounts.jwt import generate_access_token
 from accounts.models import User
-from accounts.serializers import UserSerializer, AuthenticateSerializer
+from accounts.serializers import UserSerializer, UserSignupSerializer, UserLoginSerializer
 
 
 @api_view(["GET"])
-def django_study_apiserver(request):
+def ping(request):
     res = {
         "server": "on"
     }
@@ -25,8 +25,14 @@ def django_study_apiserver(request):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
 
+    def get_serializer_class(self):
+        if self.action == 'login':
+            return UserLoginSerializer
+        elif self.action == 'signup':
+            return UserSignupSerializer
+        else:
+            return UserSerializer
 
 
     @action(methods=['get'], detail=False)
@@ -38,79 +44,32 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             return Response(status=status.HTTP_200_OK)
 
-
-
-
-class LoginView(APIView):
-    @swagger_auto_schema(request_body=AuthenticateSerializer,responses={200: AuthenticateSerializer()})
-    def post(self, request):
+    @action(methods=['post'], detail=False)
+    def login(self, request):
         data = {}
-        try:
-            json_body = loads(request.body)
-            email = json_body.get("email", None)
-            password = json_body.get("password", None)
-
-            if not email or not password:
-                raise ValueError()
-
-            user = User.objects.get(email=email)
-
-            if not user.check_password(password):
-                raise ValueError()
-
-            data["access_token"] = generate_access_token(email)
-            data["email"] = email
-            data["nickname"] = user.nickname
-            status = HTTPStatus.OK
-
-        except (ValueError, User.DoesNotExist):
-            # Login request validation exception
-            data["error"] = "Invalid form. Please fill it out again."
-            status = HTTPStatus.BAD_REQUEST
-
-        return JsonResponse(data, status=status)
+        serializer = UserLoginSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            return Response({'message':'Request Body Error.'},status=status.HTTP_409_CONFLICT)
+        user = serializer.user
+        data['access_token'] = generate_access_token(user.email)
+        data['email'] = user.email
+        data['id'] = user.id
+        data['nickname'] = user.nickname
+        return Response(data, status=status.HTTP_200_OK)
 
 
-
-class SignupView(APIView):
-    @swagger_auto_schema(request_body=AuthenticateSerializer, responses={200: AuthenticateSerializer()})
-    def post(self, request):
+    @action(methods=['post'], detail=False)
+    def signup(self, request):
         data = {}
-        status = HTTPStatus.CREATED
-        try:
-            json_body = loads(request.body)
-            email = json_body.get("email", None)
-            password = json_body.get("password", None)
-            nickname = json_body.get("nickname", None)
-
-            if not email or not password:
-                raise ValueError()
-
-            email_validator = ASCIIUsernameValidator(
-                message="Please check the email condition."
-            )
-
-            email_validator(email)
-            validate_password(password)
-
-            user = User.objects.create(email=email,nickname=nickname)
-            user.set_password(password)
-            user.save()
-
-            data["access_token"] = generate_access_token(email)
-            data["email"] = email
+        serializer = UserSignupSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            return Response({'message':'Request Body Error.'}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(email=serializer.validated_data['email']).first() is None:
+            serializer.save()
+            user = serializer.user
+            data['access_token'] = generate_access_token(user.email)
+            data['email'] = user.email
             data['id'] = user.id
             data['nickname'] = user.nickname
-
-        except ValidationError as e:
-            data["error"] = e.messages
-            status = HTTPStatus.BAD_REQUEST
-
-        except IntegrityError:
-            data["error"] = "Duplicate user name. Please use a different name."
-            status = HTTPStatus.BAD_REQUEST
-
-        except ValueError:
-            data["error"] = "Invalid form. Please fill it out again."
-            status = HTTPStatus.BAD_REQUEST
-        return JsonResponse(data, status=status)
+            return Response(data,status=status.HTTP_201_CREATED)
+        return Response({'message':'duplicate email'},status=status.HTTP_409_CONFLICT)
