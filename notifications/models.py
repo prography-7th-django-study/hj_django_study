@@ -32,7 +32,7 @@ def create_member_notification(sender, instance, created, **kwargs):
 def delete_member_notification(sender, instance, **kwargs):
     Notification.objects.create(user=instance.member, messages="가입이 거부당하셨습니다.")
 
-# 가입 성공은 PUT api/members신호가 왔을때인데 이때 DJANGO SIGNAL사용법은..?
-@receiver(m2m_changed, sender=Member)
+@receiver(post_save, sender=Member)
 def change_member_notification(sender, instance, **kwargs):
-    Notification.objects.create(user=instance.member, messages="가입이 수락되었습니다.")
+    if instance.is_dirty:
+        Notification.objects.create(user=instance.member, messages="가입이 수락되었습니다.")
