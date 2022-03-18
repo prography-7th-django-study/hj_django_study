@@ -8,7 +8,7 @@ from posts.models import Post, Comment, Member
 class Notification(models.Model):
     user = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
     messages = models.CharField(max_length=32)
-    status = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-id']
