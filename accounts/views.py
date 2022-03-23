@@ -7,10 +7,7 @@ from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.views import APIView
-
 from accounts.jwt import generate_access_token
 from accounts.models import User
 from accounts.serializers import UserSerializer, UserSignupSerializer, UserLoginSerializer
@@ -47,16 +44,13 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['post'], detail=False)
     def login(self, request):
         data = {}
-        serializer = UserLoginSerializer(data=request.data)
-        if not serializer.is_valid(raise_exception=True):
-            return Response({'message':'Request Body Error.'},status=status.HTTP_409_CONFLICT)
-        user = serializer.user
+        user = self.get_serializer().validate(request.data)
+        print(user)
         data['access_token'] = generate_access_token(user.email)
         data['email'] = user.email
         data['id'] = user.id
         data['nickname'] = user.nickname
         return Response(data, status=status.HTTP_200_OK)
-
 
     @action(methods=['post'], detail=False)
     def signup(self, request):
