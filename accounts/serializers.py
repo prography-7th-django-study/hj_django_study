@@ -1,10 +1,5 @@
-from http import HTTPStatus
-
 from django.contrib.auth import authenticate
-from django.http import JsonResponse
 from rest_framework import serializers
-
-from .jwt import generate_access_token
 from .models import User
 
 
@@ -23,6 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True}
         }
 
+
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -36,15 +32,13 @@ class UserLoginSerializer(serializers.ModelSerializer):
         }
     def validate(self, data):
         email = data.get('email',None)
+        print(email)
         password = data.get('password', None)
+        print(password)
         user = User.objects.get(email=email)
         if user is None:
-            return {
-                'email':'None'
-            }
-        self.user = user
-        return data
-
+            return None
+        return user
 
 class UserSignupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -70,3 +64,4 @@ class UserSignupSerializer(serializers.ModelSerializer):
         user.save()
         self.user = user
         return user
+
