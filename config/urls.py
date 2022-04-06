@@ -21,7 +21,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from accounts.views import ping
-from config import settings
+from config.settings import base
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -43,7 +43,7 @@ urlpatterns = [
     path('api/', include('accounts.urls')),
     path('api/', include('posts.urls')),
     path('api/', include('notifications.urls')),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]+ static(base.MEDIA_URL, document_root=base.MEDIA_ROOT)
 
 urlpatterns += [
    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

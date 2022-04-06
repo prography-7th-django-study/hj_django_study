@@ -22,7 +22,7 @@ def ping(request):
 class UserViewSet(mixins.RetrieveModelMixin,
                    mixins.UpdateModelMixin,
                    mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,GenericViewSet):
+                   mixins.ListModelMixin, GenericViewSet):
     queryset = User.objects.all()
 
     def get_serializer_class(self):
