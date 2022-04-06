@@ -1,13 +1,12 @@
-from http import HTTPStatus
-from json import loads
-from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.validators import ASCIIUsernameValidator
-from django.db import IntegrityError
-from django.http import JsonResponse
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets, status
+import json
+from json import JSONDecodeError
+
+import requests
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
+
 from accounts.jwt import generate_access_token
 from accounts.models import User
 from accounts.serializers import UserSerializer, UserSignupSerializer, UserLoginSerializer
@@ -20,7 +19,10 @@ def ping(request):
     }
     return Response(res, status=status.HTTP_200_OK)
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.RetrieveModelMixin,
+                   mixins.UpdateModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,GenericViewSet):
     queryset = User.objects.all()
 
     def get_serializer_class(self):
@@ -42,28 +44,58 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=False)
-    def login(self, request):
+    def kakao(self, request):
         data = {}
-        user = self.get_serializer().validate(request.data)
-        print(user)
-        data['access_token'] = generate_access_token(user.email)
-        data['email'] = user.email
-        data['id'] = user.id
-        data['nickname'] = user.nickname
-        return Response(data, status=status.HTTP_200_OK)
-
-    @action(methods=['post'], detail=False)
-    def signup(self, request):
-        data = {}
-        serializer = UserSignupSerializer(data=request.data)
-        if not serializer.is_valid(raise_exception=True):
-            return Response({'message':'Request Body Error.'}, status=status.HTTP_400_BAD_REQUEST)
-        if User.objects.filter(email=serializer.validated_data['email']).first() is None:
-            serializer.save()
-            user = serializer.user
-            data['access_token'] = generate_access_token(user.email)
-            data['email'] = user.email
+        accessToken = json.loads(request.body)
+        access_token = accessToken['access_token']
+        user_req = requests.get(f"https://kapi.kakao.com/v2/user/me",
+                                headers={"Authorization": f"Bearer {access_token}"})
+        user_json = user_req.json()
+        social_id = user_json.get('id')
+        error = user_json.get("error")
+        if error is not None:
+            raise JSONDecodeError(error)
+        try:
+            user = User.objects.get(social_id=social_id)
+            if user is None:
+                raise Exception
+            access_token = generate_access_token(user.social_id)
+            data['access_token'] = access_token
             data['id'] = user.id
             data['nickname'] = user.nickname
-            return Response(data,status=status.HTTP_201_CREATED)
-        return Response({'message':'duplicate email'},status=status.HTTP_409_CONFLICT)
+            return Response(data, status=status.HTTP_200_OK)
+
+        except:
+            user = User.objects.create(social_id=social_id, social_type='google')
+            data['access_token'] = generate_access_token(user.social_id)
+            data['id'] = user.id
+            data['nickname'] = user.nickname
+            return Response(data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['post'], detail=False)
+    def google(self, request):
+        data = {}
+        accessToken = json.loads(request.body)
+        access_token = accessToken['access_token']
+        user_req = requests.get(f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}")
+        user_json = user_req.json()
+        social_id = user_json.get('user_id')
+        error = user_json.get("error")
+        if error is not None:
+            raise JSONDecodeError(error)
+        try:
+            user = User.objects.get(social_id=social_id)
+            if user is None:
+                raise Exception
+            access_token = generate_access_token(user.social_id)
+            data['access_token'] = access_token
+            data['id'] = user.id
+            data['nickname'] = user.nickname
+            return Response(data, status=status.HTTP_200_OK)
+
+        except:
+            user = User.objects.create(social_id=social_id, social_type='google')
+            data['access_token'] = generate_access_token(user.social_id)
+            data['id'] = user.id
+            data['nickname'] = user.nickname
+            return Response(data, status=status.HTTP_201_CREATED)

@@ -3,10 +3,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
-
-from config import settings
-
+from django.utils.translation import gettext_lazy as _
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -51,9 +48,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     nickname = models.CharField(max_length=16, unique=True)
     image = models.ImageField(upload_to='profile', blank=True, default='')
     description = models.TextField(blank=True, default='')
+    social_id = models.CharField(max_length=32, unique=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
+    class SocialType(models.TextChoices):
+        KAKAO = 'Ka', _('Kakao')
+        GOOGLE = 'Go', _('Google')
+
+    social_type = models.CharField(
+        max_length=2,
+        choices=SocialType.choices,
+        default=SocialType.KAKAO,
+    )
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['nickname']
     def __str__(self):
@@ -65,3 +72,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         ordering = ['-id']
+
+@receiver(post_save, sender=User)
+def create_user(sender, instance, created, *args, **kwargs):
+    if created:
+        instance.nickname = f'포트럭인{instance.id}'
+        instance.save()
